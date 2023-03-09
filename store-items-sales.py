@@ -13,12 +13,8 @@ import time
 import warnings
 import lightgbm as lgb
 import functions as f
-
 f.display()
-os.getcwd()
-path="C:\\Users\\hseym\\OneDrive\\Masaüstü\\Yeni klasör\\sample data and codes\\hllgztk"
-os.chdir(path)
-os.getcwd()
+
 """ Importing Data"""
 test = pd.read_csv("test.csv", parse_dates = ["date"])
 train = pd.read_csv("train.csv", parse_dates = ["date"])
@@ -39,8 +35,8 @@ data = pd.concat([train, test],ignore_index = True)
 data["store"].nunique()
 data["item"].nunique()
 data.groupby("store")["item"].nunique()
-
 data.isnull().sum()
+
 # Sales and Outlier Detection
 std_sales = data["sales"].std()
 mean_sales = data["sales"].mean()
@@ -60,16 +56,6 @@ data = data[(data["sales"]<max_value) | (data["sales"].isna())].reset_index(drop
 
 """ feature engineering """
 # Time Columns
-def time_columns(data):
-    data["year"] = data["date"].dt.year
-    data["month"] = data["date"].dt.month
-    data["day_of_month"] = data["date"].dt.day
-    data["day_of_week"] = data["date"].dt.dayofweek+1
-    data["is_weekend"] = np.where(data["date"].dt.weekday > 4,1,0)
-    data["is_month_start"] = data["date"].dt.is_month_start.astype(int)
-    data["is_month_end"] = data["date"].dt.is_month_end.astype(int)
-    return data
-
 def times(df,column):
     dt_column = df[column]
     target_name= column
@@ -77,7 +63,6 @@ def times(df,column):
             "is_month_end", "is_month_start"]
     for a in attr:
         df[target_name+"_"+a]=getattr(dt_column.dt,a)
-
 
 times(data,"date")
 data.head()
@@ -253,44 +238,6 @@ end_time = time.time ()
 print(end_time - start_time, "seconds")
 print_score_new(new)
 
-a=m.predict(X_train)
-
-test_1 = data[data["sales"].isna()].reset_index(drop = True)
-test_1.head()
-X_test = test_1[importants]
-X_test.head()
-a = m.predict(X_test)
-
-
-
-
-
-
-
-
-
-lgb_params = {'metric': {'mae'},
-              'num_leaves': 10,
-              'learning_rate': 0.02,
-              'feature_fraction': 0.8,
-              'max_depth': 5,
-              'verbose': 0,
-              'num_boost_round': 1000,
-              'early_stopping_rounds': 200,
-              'nthread': -1}
-
-lgbtrain = lgb.Dataset(data=X_train, label=Y_train, feature_name=cols)
-lgbval = lgb.Dataset(data=X_val, label=Y_val, reference=lgbtrain, feature_name=cols)
-
-model = lgb.train(lgb_params, lgbtrain,
-                  valid_sets=[lgbtrain, lgbval],
-                  num_boost_round=lgb_params['num_boost_round'],
-                  early_stopping_rounds=lgb_params['early_stopping_rounds'],
-                  feval=lgbm_smape,
-                  verbose_eval=100)
-
-y_pred_val = model.predict(X_val, num_iteration=model.best_iteration)
-smape(np.expm1(y_pred_val), np.expm1(Y_val))
 
 
 """ 6- Model Fitting and Predicting """
